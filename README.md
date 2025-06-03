@@ -16,6 +16,7 @@ API: RESTful JSON between frontend and backend
 
 ### 🗂️ Project Structure
 
+```
 fullstack-card-game/
 ├── backend/        # FastAPI app and game logic
 │   ├── main.py
@@ -24,6 +25,7 @@ fullstack-card-game/
 │   ├── src/
 │   └── package.json
 └── README.md
+```
 
 ### ⚡️ Getting Started
 
