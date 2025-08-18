@@ -16,7 +16,8 @@ logger = logging.getLogger("uvicorn.error")
 logger.setLevel(logging.DEBUG)
 
 origins = [
-    "http://localhost:5173" 
+    "https://card-game-vite-git-main-ransithcws-projects.vercel.app",
+    "http://localhost:5173"
 ]
 
 app.add_middleware(
