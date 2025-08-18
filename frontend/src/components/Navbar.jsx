@@ -15,6 +15,11 @@ export default function Navbar() {
                         <button>Go to Bidding</button>
                     </Link>
                 </li>
+                {/* <li>
+                    <Link to="/trump" style={{ color: '#fff', textDecoration: 'none' }}>
+                        <button>Set Trump</button>
+                    </Link>
+                </li> */}
                 <li>
                     <Link to="/game" style={{ color: '#fff', textDecoration: 'none' }}>
                         <button>Play Game</button>

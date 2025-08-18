@@ -9,17 +9,48 @@ POINTS = {'J': 30, '9': 20, 'A': 11, '10': 10, 'K': 3, 'Q': 2, '7': 0, '8': 0}
 NAMES = ["Player", "Opp1", "Partner", "Opp2"]
 
 class Card:
+    """
+    A class representing a playing card with a suit and rank.
+    """
+    
     def __init__(self, suit, rank):
+        """
+        Initialize a new Card instance.
+        Args:
+            suit (str): The suit of the card (e.g., 'Hearts', 'Spades', etc.).
+            rank (str): The rank of the card (e.g., '2', 'Ace', 'King', etc.).
+        """
         self.suit = suit
         self.rank = rank
 
     def __str__(self):
+        """
+        Return a string representation of the card.
+        Returns:
+            str: A string in the format "rank of suit".
+        """
         return f"{self.rank} of {self.suit}"
 
     def __lt__(self, other):
+        """
+        Compare cards based on their rank.
+        Args:
+            other (Card): The other card to compare with.
+        Returns:
+            bool: True if this card's rank is lower than the other card's rank, False otherwise.
+        Note:
+            This method assumes a global RANKS list that defines the order of ranks.
+        """
         return RANKS.index(self.rank) < RANKS.index(other.rank)
     
     def __eq__(self, other):
+        """
+        Check if two cards are equal.
+        Args:
+            other (object): The object to compare with.
+        Returns:
+            bool: True if other is a Card with the same suit and rank, False otherwise.
+        """
         return (
             isinstance(other, Card) 
             and self.suit == other.suit 
@@ -27,6 +58,13 @@ class Card:
         )
 
     def __hash__(self):
+        """
+        Generate a hash value for the card.
+        Returns:
+            int: A hash value based on the card's suit and rank.
+        Note:
+            This method allows Card objects to be used as dictionary keys or in sets.
+        """
         return hash((self.suit, self.rank))
 
 
@@ -45,7 +83,7 @@ class Player:
             # higher bid value -> less chance of overbidding
             # TODO change chance based on hand strength
             # TODO MAKE PARTNER NOT OVERBID YOU <--- Fucking annoying!
-            bot_bid = current_bid + 10 if random.random() > (current_bid-50)/(130-50) and current_bid < 130 else 0 
+            bot_bid = current_bid + 10 if random.random() > (current_bid-30)/(130-50) and current_bid < 130 else 0 
             return bot_bid
         
     def set_trump_bot(self):
@@ -98,15 +136,14 @@ class Player:
         has_lead = any(c.suit == lead_suit for c in self.hand)
         has_trump = any(c.suit == trump_suit for c in self.hand)
 
-        if has_lead and card.suit == lead_suit:
+        if has_lead and card.suit == lead_suit or not has_lead:
             self.hand.remove(card)
             return card
-        elif not has_lead and has_trump and card.suit == trump_suit:
-            self.hand.remove(card)
-            return card
-        elif not has_lead and not has_trump:
-            self.hand.remove(card)
-            return card
+        # # Can play non trump if cannot answer
+        # elif not has_lead and has_trump and card.suit == trump_suit:
+        #     self.hand.remove(card)
+        #     return card
+        # elif not has_lead and not has_trump:
         else:
             raise ValueError("Invalid card played. Must follow suit or play trump if possible.")
     
@@ -142,25 +179,30 @@ class Game:
         self.table = []
         
         
-    def get_state(self, **kwargs) -> dict:
+    def get_state(self) -> dict: # , **kwargs?
         state = {
             "hands": [[str(card) for card in player.hand] for player in self.players],
             "table": [(str(card), pid) for card, pid in self.table],
             "trump_suit": self.trump_suit,
             "is_bidding_complete": self.is_bidding_complete,
             "highest_bid": self.highest_bid,
-            "highest_bidder": self.players[self.highest_bidder_id].name if self.highest_bidder_id else None,
+            "highest_bidder": self.players[self.highest_bidder_id].name,
             "is_trump_set": self.is_trump_set,
         }
-        state.update(kwargs)  # Allow additional state info to be passed
+        # state.update(kwargs)  # Allow additional state info to be passed
         return state
 
     def deal(self) -> list[Card]:
+        '''
+        returns:
+            first half of player's hand for use in bidding
+        '''
         deck = [Card(suit, rank) for suit in SUITS for rank in RANKS]
         random.shuffle(deck)
+        player_half_hand = deck[:4]
         for i in range(4):
             self.players[i].hand = sorted(deck[i * 8:(i + 1) * 8], key=lambda c: (SUITS.index(c.suit), RANKS.index(c.rank)))
-        return self.players[0].hand[:4]
+        return player_half_hand
 
     async def bidding_phase(self, player_bid: int=0):
         bids_made = [0]*4  # Track bids made by each player
@@ -216,6 +258,7 @@ class Game:
                     "is_trump_set": self.is_trump_set,
                 }
         
+
         # Fallback if something goes wrong and loop ends
         return {
             "message": "Bidding ended unexpectedly",
@@ -301,9 +344,10 @@ class Game:
                 "current_table": prev_table,
             }
 
-    def score_game(self):
-        scores = defaultdict(int)
+    def get_score(self):
+        scores = {}
         for i, player in enumerate(self.players):
+            scores[i] = 0
             for card in player.tricks:
                 scores[i] += POINTS[card.rank]
 
@@ -312,12 +356,14 @@ class Game:
         if bidding_score >= 100 + self.highest_bid:
             winners = self.bidding_team
         else:
-            winners = [(self.bidding_team[0] + 2) % 4, (self.bidding_team[1] + 2) % 4]
+            winners = [(self.bidding_team[0] + 1) % 4, (self.bidding_team[1] + 1) % 4]
         return {
             "bidding_team": [self.players[i].name for i in self.bidding_team],
+            "highest_bid": self.highest_bid,
             "bidding_score": bidding_score,
             "winners": [self.players[i].name for i in winners],
             "winner_score": sum(scores[i] for i in winners),
+            "scores": scores
         }
 
     # For testing only, not to be used in API

@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 import logging
+import random
 
 from game_logic import Card, Player, Game, SUITS, POINTS, RANKS
 
@@ -39,14 +40,17 @@ class BidRequest(BaseModel):
 
 class TrumpRequest(BaseModel):
     trump_suit: str
+    
+class GetHandType(BaseModel):
+    isBidding: bool
 
 
 @app.post("/start-game")
 def start_game():
     global game
     game = Game()
-    hand = game.deal()
-    return {"message": "Game Started", "hand": [str(card) for card in hand[:4]]}  # Return first four cards for bidding
+    hand = game.deal() # deals and returns first half hand for bidding
+    return {"message": "Game Started", "hand": [(card.suit, card.rank) for card in hand[:4]]}  # Return first four cards for bidding
 
 @app.get("/game-state")
 async def get_game_state():
@@ -60,6 +64,8 @@ async def request_bid(request_bid: BidRequest):
     if "game" not in globals():
         raise HTTPException(status_code=400, detail={"error": "Game not initialized"})
     if game.is_bidding_complete:
+        print("successfully completed bidding! this is the the trump setter:")
+        print(game.highest_bidder_id, game.players[game.highest_bidder_id].name)
         return {
             "message": "Bidding already complete",
             "highest_bid": game.highest_bid,
@@ -71,9 +77,11 @@ async def request_bid(request_bid: BidRequest):
     return await game.bidding_phase(player_bid)  # Assume player makes first bid always
 
 @app.get("/hand")
-async def get_hand():
+async def get_hand(is_for_bid: GetHandType = False):
     if "game" not in globals():
         raise HTTPException(status_code=400, detail={"error": "Game not initialized"})
+    if is_for_bid is True:
+        return {"halfHand": [(card.suit, card.rank) for card in random.sample(game.players[0].hand, k=4)]}
     return {"hand": [(card.suit, card.rank) for card in game.players[0].hand]}
         
         
@@ -122,6 +130,12 @@ async def get_current_table():
         return {"cards": [(str(card), pid) for card, pid in game.table]}
     else:
         return {"error": "Game not initialized"}
+    
+@app.get("/get-score")
+async def get_score():
+    if "game" in globals():
+        return game.get_score()
+    raise HTTPException(status_code=400, detail={"error": "Game not complete or game not started"})
     
  
     

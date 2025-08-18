@@ -18,6 +18,7 @@ export const continueRound = () => api.post('/continue-round').then(res => res.d
 export const setTrump = (trumpSuit) => api.post('/set-trump', { trump_suit: trumpSuit }).then(res => res.data);
 export const playCard = (card) => api.post('/play-card', card).then(res => res.data);
 export const getCurrentTable = () => api.get('/current-table').then(res => res.data);
+export const getScore = () => api.get('/get-score').then(res => res.data);
 
 // Error handling
 api.interceptors.response.use(
