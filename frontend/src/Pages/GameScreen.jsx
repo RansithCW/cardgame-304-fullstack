@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import full_table_bkgrnd from "../assets/full_table_bkgrnd.png";
 import ShowCards from "../components/ShowCards.jsx";
-import Table from "../components/Table.jsx";
+import Table from "../components/table.jsx";
 import Button from "../components/Button.jsx";
 import {
   startGame,

@@ -1,4 +1,4 @@
-import Card from './Card.jsx';
+import Card from './card.jsx';
 
 function ShowCards({ cards, onCardClick = () => {} }) {
 
