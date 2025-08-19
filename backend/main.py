@@ -17,7 +17,7 @@ logger.setLevel(logging.DEBUG)
 
 origins = [
     "https://card-game-vite-git-main-ransithcws-projects.vercel.app",
-    "https://card-game-vite-r1fatlcbu-ransithcws-projects.vercel.app",
+    "https://card-game-vite-ivxi8l34v-ransithcws-projects.vercel.app",
     "http://localhost:5173"
 ]
 
